@@ -2,6 +2,9 @@
     "name": "weirdass-http-server",
     "main": "./build/run.js",
     "type": "module",
+    "scripts": {
+        "build": "mkjson build/\\*"
+    },
     "dependencies": {
         "@j-cake/jcake-utils": "latest",
         "chalk": "latest"
