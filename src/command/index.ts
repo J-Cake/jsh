@@ -2,7 +2,7 @@ import stream from 'node:stream';
 import {iterSync} from '@j-cake/jcake-utils/iter';
 import log from "../log.js";
 
-export type LineTree = Array<string[] | LineTree>;
+export type LineTree = Array<string | LineTree>[];
 export const block = Symbol('block');
 
 export default class Command {
@@ -31,11 +31,11 @@ export default class Command {
                     body.push(i);
                 }
 
-                lines.push(Object.defineProperty(this.collapse_blocks(body), block, {value: 'block'}), []);
+                lines.at(-1)!.push(Object.defineProperty(this.collapse_blocks(body), block, {value: 'block'}));
             } else if (word == '}')
                 throw `Unexpected '}'`;
             else
-                (lines[lines.length - 1] as string[]).push(word);
+                lines.at(-1)!.push(word as any);
 
         return lines.filter(i => i.length > 0);
     }

@@ -22,7 +22,7 @@ export async function* lex(iter: AsyncIterable<string> | Iterable<string>): Asyn
         for (const {current: char, skip: next} of iterSync.peekable(chunk.split('')))
             if (char == '\\')
                 accumulator.push(next());
-
+            // TODO: strings and blocks
             else if (/\s/.test(char))
                 if (char == '\n')
                     lexemes.push(accumulator.splice(0, accumulator.length).join(''), '\n');
