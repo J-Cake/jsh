@@ -24,7 +24,10 @@ export async function* lex(iter: AsyncIterable<string> | Iterable<string>): Asyn
                 accumulator.push(next());
 
             else if (/\s/.test(char))
-                lexemes.push(accumulator.splice(0, accumulator.length).join(''));
+                if (char == '\n')
+                    lexemes.push(accumulator.splice(0, accumulator.length).join(''), '\n');
+                else
+                    lexemes.push(accumulator.splice(0, accumulator.length).join(''));
 
             else if (char == ';')
                 yield [...lexemes.splice(0, lexemes.length), accumulator.splice(0, accumulator.length).join('')]
