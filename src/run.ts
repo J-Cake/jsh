@@ -1,9 +1,9 @@
 import stream from 'node:stream';
+import _ from 'lodash';
 import {Iter} from "@j-cake/jcake-utils/iter";
 
 import {Config} from "./index.js";
 import Command from "./command.js";
-import log from "./log.js";
 
 export default async function* run(config: Config): AsyncGenerator<{
     stdin: stream.Writable,
@@ -12,7 +12,7 @@ export default async function* run(config: Config): AsyncGenerator<{
 }> {
     for await (const cmd of config.command ? lex([config.command]) : loop())
         yield await Command.from_lexemes(cmd)
-            .run();
+            .run(_.filter(process.env, (i, a) => i && a as any) as any);
 }
 
 export async function* chars(iter: AsyncIterable<Buffer> | Iterable<Buffer>): AsyncGenerator<string> {

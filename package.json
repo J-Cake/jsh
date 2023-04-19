@@ -7,10 +7,12 @@
     },
     "dependencies": {
         "@j-cake/jcake-utils": "^1.2.1-r0",
-        "chalk": "latest"
+        "chalk": "latest",
+        "lodash": "latest"
     },
     "devDependencies": {
         "@types/node": "latest",
+        "@types/lodash": "latest",
         "@j-cake/mkjson": "latest",
         "typescript": "latest",
         "esbuild": "latest"

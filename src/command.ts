@@ -2,14 +2,41 @@ import stream from 'node:stream';
 import {iterSync} from '@j-cake/jcake-utils/iter';
 import log from "./log.js";
 
-export type LineTree = Array<string | LineTree>[];
+export type Pipe = ({
+    from_index: string | number,
+    from_fd: number,
+    corked: false,
+    to_index: string | number,
+    to_fd: number
+} | {
+    from_index: string | number,
+    from_fd: number,
+    corked: true,
+})[];
+export type LineTree = Array<Pipe | string | LineTree>[];
 export const block = Symbol('block');
 
 export default class Command {
     private constructor(private lines: LineTree) {
     }
+
     public static from_lexemes(words: string[]): Command {
         return new this(this.collapse_blocks(words));
+    }
+
+    private static parse_pipe(word: string): Pipe {
+        if (!word.startsWith('|') && !word.startsWith('>'))
+            throw `Expected pipe operator, got '${word}'`;
+
+        const pipes: Pipe = (word.slice(1) || '>')
+            .split(',')
+            .map(function (i) {
+                // TODO: parse pipe operator
+            });
+
+        log.debug('pipe', pipes);
+
+        return pipes;
     }
 
     private static collapse_blocks(words: string[]): LineTree {
@@ -20,7 +47,7 @@ export default class Command {
                 if (word == '\n')
                     lines.push([]);
                 else
-                    lines.push([word], [])
+                    lines.push([Command.parse_pipe(word)])
             else if (word == '{') {
                 const body: string[] = [];
                 let bracket_count = 1;
@@ -43,7 +70,11 @@ export default class Command {
         return lines.filter(i => i.length > 0);
     }
 
-    public async run(): Promise<{ stdin: stream.Writable, stdout: stream.Readable, stderr: stream.Readable }> {
+    public async run(env: Record<string, string>): Promise<{
+        stdin: stream.Writable,
+        stdout: stream.Readable,
+        stderr: stream.Readable
+    }> {
         // get all pipe operators
         log.debug(this.lines);
 
