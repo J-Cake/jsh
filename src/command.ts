@@ -1,23 +1,26 @@
 import stream from 'node:stream';
 import {iterSync} from '@j-cake/jcake-utils/iter';
-import log from "../log.js";
+import log from "./log.js";
 
 export type LineTree = Array<string | LineTree>[];
 export const block = Symbol('block');
 
 export default class Command {
+    private constructor(private lines: LineTree) {
+    }
     public static from_lexemes(words: string[]): Command {
-        const lines = this.collapse_blocks(words);
-        log.debug("lines:", lines);
-        return new this();
+        return new this(this.collapse_blocks(words));
     }
 
     private static collapse_blocks(words: string[]): LineTree {
         const lines: LineTree = [[]];
 
         for (const {current: word, skip: next} of iterSync.peekable(words))
-            if (word == '\n')
-                lines.push([]);
+            if (word == '\n' || word.startsWith('|') || word.startsWith('>'))
+                if (word == '\n')
+                    lines.push([]);
+                else
+                    lines.push([word], [])
             else if (word == '{') {
                 const body: string[] = [];
                 let bracket_count = 1;
@@ -41,6 +44,9 @@ export default class Command {
     }
 
     public async run(): Promise<{ stdin: stream.Writable, stdout: stream.Readable, stderr: stream.Readable }> {
-        throw `Not implemented`;
+        // get all pipe operators
+        log.debug(this.lines);
+
+        throw "Not implemented";
     }
 }

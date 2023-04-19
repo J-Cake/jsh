@@ -1,8 +1,8 @@
 import stream from 'node:stream';
-import {Iter, iterSync} from "@j-cake/jcake-utils/iter";
+import {Iter} from "@j-cake/jcake-utils/iter";
 
 import {Config} from "./index.js";
-import Command from "./command/index.js";
+import Command from "./command.js";
 import log from "./log.js";
 
 export default async function* run(config: Config): AsyncGenerator<{
@@ -30,53 +30,64 @@ export async function* chars(iter: AsyncIterable<Buffer> | Iterable<Buffer>): As
                 yield char;
 }
 
+export async function* peekable<T>(iterator: AsyncIterable<T> | Iterable<T>): AsyncGenerator<{
+    current: T,
+    skip: () => Promise<T>
+}> {
+    const iter = iterator[Symbol.asyncIterator]?.() ?? iterator[Symbol.iterator]?.();
+
+    for (let i = await iter.next(); !i.done; i = await iter.next())
+        yield {current: i.value, skip: async () => (i = await iter.next()).value};
+}
+
 export async function* lex(iter: AsyncIterable<string> | Iterable<string>): AsyncGenerator<string[]> {
     const accumulator: string[] = [];
     const lexemes: string[] = [];
     let brace_count = 0;
     let string_started = false;
 
-    for await (const chunk of iter)
-        for (const {current: char, skip: next} of iterSync.peekable(chunk.split('')))
-            if (char == '\\')
-                accumulator.push(next());
-            else if (char == '"')
-                if (string_started) {
-                    lexemes.push(accumulator.splice(0, accumulator.length).join(''));
-                    string_started = false;
-                } else
-                    string_started = true;
-            else if (string_started)
-                accumulator.push(char);
-            else if (char == '{') {
-                brace_count++;
-                lexemes.push(accumulator.splice(0, accumulator.length).join(''), '{');
-            } else if (char == '}') {
-                brace_count--;
+    for await (const {current: char, skip: next} of Iter(iter)
+        .pipe(peekable))
 
-                lexemes.push(accumulator.splice(0, accumulator.length).join(''), '}');
+        if (char == '\\')
+            accumulator.push(await next());
+        else if (char == '#')
+            for (let i = await next(); i != '\n'; i = await next());
+        else if (char == '"')
+            if (string_started) {
+                lexemes.push(accumulator.splice(0, accumulator.length).join(''));
+                string_started = false;
+            } else
+                string_started = true;
+        else if (string_started)
+            accumulator.push(char);
+        else if (char == '{') {
+            brace_count++;
+            lexemes.push(accumulator.splice(0, accumulator.length).join(''), '{');
+        } else if (char == '}') {
+            brace_count--;
 
-                if (brace_count < 0)
-                    throw `Unexpected '}'`;
-            } else if (char == ';' && brace_count == 0)
-                yield [...lexemes.splice(0, lexemes.length), accumulator.splice(0, accumulator.length).join('')]
-                    .filter(i => i.length > 0);
+            lexemes.push(accumulator.splice(0, accumulator.length).join(''), '}');
 
-            else if (/[\s;]/.test(char))
-                if (char == '\n')
-                    lexemes.push(accumulator.splice(0, accumulator.length).join(''), '\n');
-                else
-                    lexemes.push(accumulator.splice(0, accumulator.length).join(''));
+            if (brace_count < 0)
+                throw `Unexpected '}'`;
+        } else if (char == ';' && brace_count == 0)
+            yield [...lexemes.splice(0, lexemes.length), accumulator.splice(0, accumulator.length).join('')]
+                .filter(i => i.length > 0);
 
+        else if (/[\s;]/.test(char))
+            if (char == '\n')
+                lexemes.push(accumulator.splice(0, accumulator.length).join(''), '\n');
             else
-                accumulator.push(char);
+                lexemes.push(accumulator.splice(0, accumulator.length).join(''));
+
+        else
+            accumulator.push(char);
 }
 
 export async function* loop(): AsyncGenerator<string[]> {
     for await (const cmd of Iter(process.stdin)
         .pipe(chars)
-        .pipe(lex)) {
-        log.debug("cmd:", cmd);
+        .pipe(lex))
         yield cmd;
-    }
 }
