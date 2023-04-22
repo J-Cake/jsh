@@ -1,8 +1,9 @@
 import stream from 'node:stream';
 import {iterSync} from '@j-cake/jcake-utils/iter';
 import log from "./log.js";
+import {terminator} from "./run.js";
 
-export type Pipe = ({
+export type Pipe = (({
     from_index: string | number,
     from_fd: number,
     corked: false,
@@ -12,15 +13,16 @@ export type Pipe = ({
     from_index: string | number,
     from_fd: number,
     corked: true,
-})[];
-export type LineTree = Array<Pipe | string | LineTree>[];
+})[]) & { [pipe]: true };
+export type LineTree = Array<Pipe | Array<Pipe | typeof terminator | string | LineTree>>;
 export const block = Symbol('block');
+export const pipe = Symbol('pipe');
 
 export default class Command {
     private constructor(private lines: LineTree) {
     }
 
-    public static from_lexemes(words: string[]): Command {
+    public static from_lexemes(words: (string|typeof terminator)[]): Command {
         return new this(this.collapse_blocks(words));
     }
 
@@ -28,7 +30,7 @@ export default class Command {
         if (!word.startsWith('|') && !word.startsWith('>'))
             throw `Expected pipe operator, got '${word}'`;
 
-        const out: Pipe = [];
+        const out: Pipe = Object.assign([], { [pipe]: true }) as Pipe;
         for (const pipe of (word.slice(1) || '>').split(',').filter(i => i.length > 0)) {
             const coalesce = <T, R>(i: T | undefined, d: R, cb: (x: T) => R): R => i ? cb(i) : d;
 
@@ -60,20 +62,22 @@ export default class Command {
             out.push(route);
         }
 
-        return out;
+        return Object.assign(out, { [pipe]: true });
     }
 
-    private static collapse_blocks(words: string[]): LineTree {
+    private static collapse_blocks(words: (string|typeof terminator)[]): LineTree {
         const lines: LineTree = [[]];
 
         for (const {current: word, skip: next} of iterSync.peekable(words))
-            if (word == '\n' || word.startsWith('|') || word.startsWith('>'))
+            if (word == terminator)
+                lines.push([terminator]);
+            else if (word == '\n' || word.startsWith('|') || word.startsWith('>'))
                 if (word == '\n')
                     lines.push([]);
                 else
-                    lines.push([Command.parse_pipe(word)])
+                    lines.push(Command.parse_pipe(word))
             else if (word == '{') {
-                const body: string[] = [];
+                const body: (string|typeof terminator)[] = [];
                 let bracket_count = 1;
 
                 for (let i = next(); i != '}' && bracket_count > 0; i = next()) {
@@ -85,7 +89,14 @@ export default class Command {
                     body.push(i);
                 }
 
-                lines.at(-1)!.push(Object.defineProperty(this.collapse_blocks(body), block, {value: 'block'}));
+                const isPipe = (x: object): x is Pipe => (x as Pipe)[pipe] === true;
+
+                const last = lines.at(-1)!;
+                if (isPipe(last))
+                    lines.push([Object.assign(this.collapse_blocks(body), {[block]: true})]);
+                else
+                    last.push(Object.assign(this.collapse_blocks(body), {[block]: true}));
+
             } else if (word == '}')
                 throw `Unexpected '}'`;
             else

@@ -40,9 +40,11 @@ export async function* peekable<T>(iterator: AsyncIterable<T> | Iterable<T>): As
         yield {current: i.value, skip: async () => (i = await iter.next()).value};
 }
 
-export async function* lex(iter: AsyncIterable<string> | Iterable<string>): AsyncGenerator<string[]> {
+export const terminator = Symbol(';');
+
+export async function* lex(iter: AsyncIterable<string> | Iterable<string>): AsyncGenerator<(string|typeof terminator)[]> {
     const accumulator: string[] = [];
-    const lexemes: string[] = [];
+    const lexemes: (string|typeof terminator)[] = [];
     let brace_count = 0;
     let string_started = false;
 
@@ -73,11 +75,13 @@ export async function* lex(iter: AsyncIterable<string> | Iterable<string>): Asyn
                 throw `Unexpected '}'`;
         } else if (char == ';' && brace_count == 0)
             yield [...lexemes.splice(0, lexemes.length), accumulator.splice(0, accumulator.length).join('')]
-                .filter(i => i.length > 0);
+                .filter(i => typeof i == 'string' ? i.length > 0 : true);
 
         else if (/[\s;]/.test(char))
             if (char == '\n')
                 lexemes.push(accumulator.splice(0, accumulator.length).join(''), '\n');
+            else if (char == ';')
+                lexemes.push(accumulator.splice(0, accumulator.length).join(''), terminator);
             else
                 lexemes.push(accumulator.splice(0, accumulator.length).join(''));
 
@@ -85,9 +89,10 @@ export async function* lex(iter: AsyncIterable<string> | Iterable<string>): Asyn
             accumulator.push(char);
 }
 
-export async function* loop(): AsyncGenerator<string[]> {
+export async function* loop(): AsyncGenerator<(string|typeof terminator)[]> {
     for await (const cmd of Iter(process.stdin)
         .pipe(chars)
         .pipe(lex))
+
         yield cmd;
 }
