@@ -28,15 +28,39 @@ export default class Command {
         if (!word.startsWith('|') && !word.startsWith('>'))
             throw `Expected pipe operator, got '${word}'`;
 
-        const pipes: Pipe = (word.slice(1) || '>')
-            .split(',')
-            .map(function (i) {
-                // TODO: parse pipe operator
-            });
+        const out: Pipe = [];
+        for (const pipe of (word.slice(1) || '>').split(',').filter(i => i.length > 0)) {
+            const coalesce = <T, R>(i: T | undefined, d: R, cb: (x: T) => R): R => i ? cb(i) : d;
 
-        log.debug('pipe', pipes);
+            // TODO: Add |= syntax
 
-        return pipes;
+            const [from, to] = pipe.match(/^([\w.+-]*)(?:<|>([\w.+-]*))$/)?.slice(1) ?? [];
+
+            const [from_index, from_fd] = from.match(/^([\w+-]*)(?:\.(\d*))?$/)?.slice(1) ?? [];
+
+            if (to === undefined || to === null) {
+                out.push({
+                    from_index: coalesce(from_index, -1, i => isNaN(Number(i)) ? i : Number(i)),
+                    from_fd: coalesce(from_fd, 0, i => Number(i)),
+                    corked: true
+                });
+                continue;
+            }
+
+            const [to_index, to_fd] = to.match(/^(?:([\w+-]*)\.)?(\d*)$/)?.slice(1) ?? [];
+
+            const route: Pipe[number] = {
+                from_index: coalesce(from_index, -1, i => isNaN(Number(i)) ? i : Number(i)),
+                from_fd: coalesce(from_fd, 1, i => Number(i)),
+                to_index: coalesce(to_index, +1, i => isNaN(Number(i)) ? i : Number(i)),
+                to_fd: coalesce(to_fd, 0, i => Number(i)),
+                corked: false
+            };
+
+            out.push(route);
+        }
+
+        return out;
     }
 
     private static collapse_blocks(words: string[]): LineTree {
