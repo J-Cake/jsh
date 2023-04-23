@@ -1,6 +1,7 @@
 {
     "name": "jshell",
     "main": "./build/run.js",
+    "bin": "./build/run.js",
     "type": "module",
     "scripts": {
         "build": "mkjson build/\\*"
@@ -22,6 +23,7 @@
     },
     "deploy": {
         "main": "run.js",
+        "bin": "run.js",
         "imports": {
             "#app": "./index.js"
         }

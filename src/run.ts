@@ -1,14 +1,14 @@
-import stream from 'node:stream';
 import _ from 'lodash';
 import {Iter} from "@j-cake/jcake-utils/iter";
 
 import {Config} from "./index.js";
 import Command from "./command.js";
+import {DoubleEndedStream} from "./statement.js";
 
 export default async function* run(config: Config): AsyncGenerator<{
-    stdin: stream.Writable,
-    stdout: stream.Readable,
-    stderr: stream.Readable
+    stdin: DoubleEndedStream<Buffer>
+    stdout: DoubleEndedStream<Buffer>
+    stderr: DoubleEndedStream<Buffer>
 }> {
     for await (const cmd of config.command ? lex([config.command]) : loop())
         yield await Command.from_lexemes(cmd)
