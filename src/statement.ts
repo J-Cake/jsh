@@ -4,6 +4,7 @@ import {Iter, iter} from '@j-cake/jcake-utils/iter';
 import Command, {block, isBlock} from "./command.js";
 import log from "./log.js";
 import {terminator} from "./run.js";
+import DoubleEndedStream, {mk_stream} from "./stream.js";
 
 export const statement = Symbol('statement');
 export const runner = Symbol('runner');
@@ -24,49 +25,6 @@ export interface Statement {
     } | {
         corked: true
     }))[],
-}
-
-export interface DoubleEndedStream<T> extends AsyncIterable<T> {
-    write(data: T): Promise<void>,
-
-    read(): Promise<T>,
-
-    join(other: AsyncIterable<T>): void
-}
-
-export function pipe_from<T>(from: AsyncIterable<T>): DoubleEndedStream<T> {
-    const stream = mk_stream<T>();
-    Iter(from).map(i => stream.write(i));
-
-    return stream;
-}
-
-export function mk_stream<T>(): DoubleEndedStream<T> {
-    const buffer: T[] = [];
-    let awaitRead: null | ((item: T) => void) = null;
-    const stream: DoubleEndedStream<T> = {
-        async write(t) {
-            buffer.push(t);
-            if (awaitRead)
-                awaitRead(buffer.shift()!);
-        },
-        read() {
-            return new Promise(ok => buffer[0] ? ok(buffer.shift()!) : awaitRead = ok);
-        },
-        async join(other) {
-            for await (const i of other)
-                await stream.write(i);
-        },
-        [Symbol.asyncIterator]() {
-            return {
-                next() {
-                    return stream.read().then(i => ({value: i, done: false}));
-                }
-            }
-        }
-    };
-
-    return stream;
 }
 
 export interface Runner {
@@ -93,22 +51,29 @@ export default function run_statement(statement: Statement): Runner {
         [runner]: true,
 
         async start(env: Record<string, string>): Promise<boolean> {
-            log.debug(statement);
+            if (statement.args === terminator)
+                return true;
 
-            const args = await Promise.all(statement.args.map(function (i) {
+            const args = await Promise.all(statement.args.map(i => {
                 if (isBlock(i))
-                    return new Command(i)
-                        .run(env)
+                    return new Command(i).run(env);
                 else return i;
             }));
 
+            // log.debug(`Args:`, args);
+
             for (const [a, subblock] of args.filter(isBlock).entries() as any as [number, Awaited<ReturnType<typeof Command.prototype.run>>][]) {
-                subblock.stderr.join(stdio.stderr)
+                subblock.stderr.join(stdio.stderr);
                 stdio.stdin.join(subblock.stdin);
 
-                const stdout = Buffer.concat(await iter.collect(subblock.stdout));
+                log.debug(`Waiting for subblock ${subblock.stdout.id} to finish...`);
+                const stdout = Buffer.concat(await subblock.stdout.collect());
+                log.debug('Subblock stdout:', stdout.toString('utf-8'));
+
                 args[a] = stdout.toString();
             }
+
+            // log.debug(`Running command`, args);
 
             const isAllStrings = (args: any[]): args is string[] => args.every(i => typeof i === 'string');
             if (!isAllStrings(args))
@@ -117,7 +82,12 @@ export default function run_statement(statement: Statement): Runner {
             if (!args[0])
                 throw new Error('No command specified!');
 
-            const proc = cp.spawn(args.shift()!, args);
+            const proc = cp.spawn(args.shift()!, args, {
+                env,
+                cwd: env.PWD ?? process.cwd()
+            });
+
+            // TODO: Obey pipes
 
             stream.Readable.from(stdio.stdin).pipe(proc.stdin);
             stdio.stdout.join(proc.stdout);
@@ -137,10 +107,7 @@ export async function run_block(statements: Statement[], env: Record<string, str
     const stdout = mk_stream<Buffer>();
     const stderr = mk_stream<Buffer>();
 
-    // TODO: Handle terminators
-
     const awaited: Promise<boolean>[] = [];
-
     for (const i of statements)
         if (i.args !== terminator) {
             const runner = run_statement(i);
@@ -155,5 +122,9 @@ export async function run_block(statements: Statement[], env: Record<string, str
     if (awaited.length > 0)
         log.verbose(`There are still statements waiting for termination! (${awaited.length})`);
 
-    return Object.assign({stdin, stdout, stderr}, {[block]: true});
+    return Object.assign({
+        stdin,
+        stdout,
+        stderr
+    }, {[block]: true});
 }

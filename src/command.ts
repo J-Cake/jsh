@@ -1,6 +1,7 @@
 import {iterSync} from '@j-cake/jcake-utils/iter';
 import {terminator} from "./run.js";
-import {DoubleEndedStream, run_block, Statement, statement} from "./statement.js";
+import {run_block, Statement, statement} from "./statement.js";
+import DoubleEndedStream from "./stream.js";
 
 export type Pipe = {
     [pipe]: true,

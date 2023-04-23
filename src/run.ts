@@ -3,7 +3,7 @@ import {Iter} from "@j-cake/jcake-utils/iter";
 
 import {Config} from "./index.js";
 import Command from "./command.js";
-import {DoubleEndedStream} from "./statement.js";
+import DoubleEndedStream from "./stream.js";
 
 export default async function* run(config: Config): AsyncGenerator<{
     stdin: DoubleEndedStream<Buffer>
