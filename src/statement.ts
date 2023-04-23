@@ -3,13 +3,14 @@ import stream from 'node:stream';
 import {Iter, iter} from '@j-cake/jcake-utils/iter';
 import Command, {block, isBlock} from "./command.js";
 import log from "./log.js";
+import {terminator} from "./run.js";
 
 export const statement = Symbol('statement');
 export const runner = Symbol('runner');
 
 export interface Statement {
     [statement]: true,
-    args: string[],
+    args: string[] | typeof terminator,
     label?: string,
 
     is_root: boolean,
@@ -77,10 +78,10 @@ export interface Runner {
 
     [runner]: true
 
-    start(env: Record<string, string>);
+    start(env: Record<string, string>): Promise<boolean>;
 }
 
-export default async function run_statement(statement: Statement): Promise<Runner> {
+export default function run_statement(statement: Statement): Runner {
     const stdio = {
         stdin: mk_stream<Buffer>(),
         stdout: mk_stream<Buffer>(),
@@ -91,7 +92,7 @@ export default async function run_statement(statement: Statement): Promise<Runne
         statement,
         [runner]: true,
 
-        async start(env: Record<string, string>) {
+        async start(env: Record<string, string>): Promise<boolean> {
             log.debug(statement);
 
             const args = await Promise.all(statement.args.map(function (i) {
@@ -122,7 +123,7 @@ export default async function run_statement(statement: Statement): Promise<Runne
             stdio.stdout.join(proc.stdout);
             stdio.stderr.join(proc.stderr);
 
-            return await new Promise(ok => proc.on('exit', code => ok(code === 0)));
+            return await new Promise<boolean>(ok => proc.on('exit', code => ok(code === 0)));
         }
     };
 }
@@ -138,15 +139,21 @@ export async function run_block(statements: Statement[], env: Record<string, str
 
     // TODO: Handle terminators
 
-    for (const statement of statements) {
-        const runner = await run_statement(statement);
-        runner.stdin.join(stdin);
-        stdout.join(runner.stdout);
-        stderr.join(runner.stderr);
+    const awaited: Promise<boolean>[] = [];
 
-        if (!await runner.start(env))
+    for (const i of statements)
+        if (i.args !== terminator) {
+            const runner = run_statement(i);
+            runner.stdin.join(stdin);
+            stdout.join(runner.stdout);
+            stderr.join(runner.stderr);
+
+            awaited.push(runner.start(env));
+        } else if (!await awaited.pop())
             break;
-    }
+
+    if (awaited.length > 0)
+        log.verbose(`There are still statements waiting for termination! (${awaited.length})`);
 
     return Object.assign({stdin, stdout, stderr}, {[block]: true});
 }

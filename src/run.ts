@@ -74,7 +74,7 @@ export async function* lex(iter: AsyncIterable<string> | Iterable<string>): Asyn
             if (brace_count < 0)
                 throw `Unexpected '}'`;
         } else if (char == ';' && brace_count == 0)
-            yield [...lexemes.splice(0, lexemes.length), accumulator.splice(0, accumulator.length).join('')]
+            yield [...lexemes.splice(0, lexemes.length), accumulator.splice(0, accumulator.length).join(''), terminator as typeof terminator]
                 .filter(i => typeof i == 'string' ? i.length > 0 : true);
 
         else if (/[\s;]/.test(char))
