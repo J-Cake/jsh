@@ -1,3 +1,4 @@
+import stream from 'node:stream';
 import {Iter, iter} from '@j-cake/jcake-utils/iter';
 import log from "./log.js";
 
@@ -20,6 +21,13 @@ export function pipe_from<T>(from: AsyncIterable<T>): DoubleEndedStream<T> {
     Iter(from).map(i => stream.write(i));
 
     return stream;
+}
+
+export function pipe_to<T>(to: stream.Writable): DoubleEndedStream<T> {
+    const out = mk_stream<T>();
+    stream.Readable.from(out).pipe(to);
+
+    return out;
 }
 
 let sid = 0;

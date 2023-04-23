@@ -104,7 +104,7 @@ export default class Command {
 
             const [from, to] = pipe.match(/^([\w.+-]*)(?:<|>([\w.+-]*))$/)?.slice(1) ?? [];
 
-            const [from_index, from_fd] = from.match(/^([\w+-]*)(?:\.(\d*))?$/)?.slice(1) ?? [];
+            const [from_index, from_fd] = from.match(/^([\w+-]*)(?:\.(\w*))?$/)?.slice(1) ?? [];
 
             if (to === undefined || to === null) {
                 out.push({
@@ -115,12 +115,12 @@ export default class Command {
                 continue;
             }
 
-            const [to_index, to_fd] = to.match(/^(?:([\w+-]*)\.)?(\d*)$/)?.slice(1) ?? [];
+            const [to_index, to_fd] = to.match(/^(?:([\w+-]*)\.)?(\w*)$/)?.slice(1) ?? [];
 
             const route: Pipe['routes'][number] = {
-                from_index: coalesce(from_index, -1, i => isNaN(Number(i)) ? i : Number(i)),
+                from_index: coalesce(from_index, -1, i => isNaN(Number(i)) ? i : Number(i)), // TODO: Check for FD aliases i/o/e
                 from_fd: coalesce(from_fd, 1, i => Number(i)),
-                to_index: coalesce(to_index, +1, i => isNaN(Number(i)) ? i : Number(i)),
+                to_index: coalesce(to_index, +1, i => isNaN(Number(i)) ? i : Number(i)), // TODO: Check for FD aliases i/o/e
                 to_fd: coalesce(to_fd, 0, i => Number(i)),
                 corked: false
             };
