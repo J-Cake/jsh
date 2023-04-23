@@ -60,20 +60,17 @@ export default function run_statement(statement: Statement): Runner {
                 else return i;
             }));
 
-            // log.debug(`Args:`, args);
+            for (const [a, subblock] of args.entries() as any as [number, Awaited<ReturnType<typeof Command.prototype.run>>][]) {
+                if (!isBlock(subblock))
+                    continue;
 
-            for (const [a, subblock] of args.filter(isBlock).entries() as any as [number, Awaited<ReturnType<typeof Command.prototype.run>>][]) {
                 subblock.stderr.join(stdio.stderr);
                 stdio.stdin.join(subblock.stdin);
 
-                log.debug(`Waiting for subblock ${subblock.stdout.id} to finish...`);
                 const stdout = Buffer.concat(await subblock.stdout.collect());
-                log.debug('Subblock stdout:', stdout.toString('utf-8'));
 
                 args[a] = stdout.toString();
             }
-
-            // log.debug(`Running command`, args);
 
             const isAllStrings = (args: any[]): args is string[] => args.every(i => typeof i === 'string');
             if (!isAllStrings(args))
