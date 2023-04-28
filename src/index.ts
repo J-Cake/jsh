@@ -42,7 +42,7 @@ export default async function main(argv: string[]): Promise<boolean> {
         stream.Readable.from(stdout).pipe(process.stdout, {end: false});
         stream.Readable.from(stderr).pipe(process.stderr, {end: false});
 
-        stdin.join(process.stdin);
+        stdin.concat(process.stdin);
     }
 
     return true;

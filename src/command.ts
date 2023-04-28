@@ -1,7 +1,6 @@
 import {iterSync} from '@j-cake/jcake-utils/iter';
 import {terminator} from "./run.js";
-import {run_block, Statement, statement} from "./statement.js";
-import DoubleEndedStream from "./stream.js";
+import {run_block, Running, Statement, statement} from "./statement.js";
 
 export type Pipe = {
     [pipe]: true,
@@ -70,7 +69,9 @@ export default class Command {
             if (i.corked)
                 stmt.dest.push({
                     corked: true,
-                    from: i.from_fd
+                    from: i.from_fd,
+                    to: null,
+                    stmt: null
                 });
 
             else {
@@ -177,11 +178,7 @@ export default class Command {
         return lines.filter(i => isPipe(i) || typeof i == 'symbol' || i.length > 0);
     }
 
-    public async run(env: Record<string, string>): Promise<{
-        stdin: DoubleEndedStream<Buffer>,
-        stdout: DoubleEndedStream<Buffer>,
-        stderr: DoubleEndedStream<Buffer>,
-    }> {
+    public async run(env: Record<string, string>): Promise<Running> {
         const loose_parts = Command.separate(this.lines);
 
         return await run_block(loose_parts, env);

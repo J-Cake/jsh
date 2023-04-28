@@ -3,13 +3,9 @@ import {Iter} from "@j-cake/jcake-utils/iter";
 
 import {Config} from "./index.js";
 import Command from "./command.js";
-import DoubleEndedStream from "./stream.js";
+import {Running} from "./statement.js";
 
-export default async function* run(config: Config): AsyncGenerator<{
-    stdin: DoubleEndedStream<Buffer>
-    stdout: DoubleEndedStream<Buffer>
-    stderr: DoubleEndedStream<Buffer>
-}> {
+export default async function* run(config: Config): AsyncGenerator<Running> {
     for await (const cmd of config.command ? lex([config.command]) : loop())
         yield await Command.from_lexemes(cmd)
             .run(_.filter(process.env, (i, a) => i && a as any) as any);

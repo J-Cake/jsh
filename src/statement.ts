@@ -1,10 +1,14 @@
 import * as cp from 'node:child_process';
 import stream from 'node:stream';
 
-import Command, {block, isBlock} from "./command.js";
+import Command, {block, isBlock, LineTree} from "./command.js";
 import log from "./log.js";
 import {terminator} from "./run.js";
 import DoubleEndedStream, {mk_stream, pipe_from, pipe_to} from "./stream.js";
+import split_view from "./split_view.js";
+import lang_struct from "./lang_struct.js";
+import library_fn from "./library_fn.js";
+import executable from "./executable.js";
 
 export const statement = Symbol('statement');
 export const runner = Symbol('runner');
@@ -23,7 +27,9 @@ export interface Statement {
         stmt: Statement,
         corked: false
     } | {
-        corked: true
+        corked: true,
+        to: null,
+        stmt: null
     }))[],
 }
 
@@ -37,6 +43,13 @@ export interface Runner {
     [runner]: true
 
     start(env: Record<string, string>): Promise<boolean>;
+}
+
+export interface Running {
+    stdin: DoubleEndedStream<Buffer>,
+    stdout: DoubleEndedStream<Buffer>,
+    stderr: DoubleEndedStream<Buffer>,
+    exit(): Promise<boolean>
 }
 
 export default function run_statement(statement: Statement): Runner {
@@ -54,99 +67,40 @@ export default function run_statement(statement: Statement): Runner {
             if (statement.args === terminator)
                 return true;
 
-            const args = await Promise.all(statement.args.map(i => {
-                if (isBlock(i))
-                    return new Command(i).run(env);
-                else return i;
-            }));
+            const runners = [
+                await lang_struct(statement.args as any)
+                    .catch(() => library_fn(statement.args as any))
+                    .catch(() => executable(statement.args as any, env)),
 
-            for (const [a, subblock] of args.entries() as any as [number, Awaited<ReturnType<typeof Command.prototype.run>>][]) {
-                if (!isBlock(subblock))
-                    continue;
+                ...await Promise.all(statement.dest.map(i => lang_struct(i.stmt!.args as any)
+                    .catch(() => library_fn(i.stmt!.args as any))
+                    .catch(() => executable(i.stmt!.args as any, env))))
+            ];
 
-                subblock.stderr.join(stdio.stderr);
-                stdio.stdin.join(subblock.stdin);
+            for (const [a, i] of statement.dest.entries())
+                if (i.stmt)
+                    [
+                        runners[a + 1].stdin,
+                        runners[a + 1].stdout,
+                        runners[a + 1].stderr,
+                    ][i.to].concat([
+                        runners[0].stdin.split(),
+                        runners[0].stdout.split(),
+                        runners[0].stderr.split(),
+                    ][i.from]);
 
-                const stdout = Buffer.concat(await subblock.stdout.collect());
+            runners[0].stdin.concat(stdio.stdin);
+            stdio.stdout.concat(runners.at(-1)!.stdout);
+            stdio.stderr.concat(runners.at(-1)!.stderr);
 
-                args[a] = stdout.toString();
-            }
-
-            const isAllStrings = (args: any[]): args is string[] => args.every(i => typeof i === 'string');
-            if (!isAllStrings(args))
-                throw new Error('Not all arguments are strings!');
-
-            if (!args[0])
-                throw new Error('No command specified!');
-
-            const proc = cp.spawn(args.shift()!, args, {
-                env,
-                cwd: env.PWD ?? process.cwd()
-            });
-
-            stream.Readable.from(stdio.stdin).pipe(proc.stdin);
-
-            // TODO: Obey pipes
-
-            const substatements: Statement[] = statement.dest
-                .map(i => i['stmt'])
-                .filter(i => !!i);
-            const runners = substatements.map(run_statement);
-
-            for (const [i, {from, corked, to}] of statement.dest.entries() as Iterable<[number, {
-                from: number,
-                corked: boolean,
-                to?: number
-            }]>) {
-                if (corked || typeof to != 'number')
-                    continue;
-
-                const prev: Runner | cp.ChildProcessWithoutNullStreams = runners[i - 1] ?? proc;
-                const stmt = runners[i];
-
-                const _from = [
-                    runner in prev ? prev.stdin : pipe_to<Buffer>((prev as cp.ChildProcessWithoutNullStreams).stdin),
-                    pipe_from(prev.stdout),
-                    pipe_from(prev.stderr),
-                ];
-                const _to = [
-                    stmt.stdin,
-                    stmt.stdout,
-                    stmt.stderr
-                ];
-
-                log.debug('Piping', _from[from], 'to', _to[to]);
-
-                _to[to].join(_from[from]);
-            }
-
-            log.debug('Plumbing connected, lesgoo');
-            const running = runners.map(i => i.start(env));
-
-            const last = runners.at(-1);
-            if (!last) {
-                log.debug(`There's nowhere to pipe to, piping to block`);
-                stdio.stdout.join(proc.stdout);
-                stdio.stderr.join(proc.stderr);
-
-                return new Promise<boolean>(ok => proc.on('exit', code => ok(code === 0)));
-            }
-
-            stdio.stdout.join(last.stdout);
-            stdio.stderr.join(last.stderr);
-
-            return Promise.all([new Promise<boolean>(ok => proc.on('exit', code => ok(code === 0))), ...running])
-                .then(proc => proc.every(i => i));
+            return await Promise.all(runners.map(i => i.exit()))
+                .then(res => res.every(i => i));
         }
     };
 
 }
 
-export async function run_block(statements: Statement[], env: Record<string, string>): Promise<{
-    stdin: DoubleEndedStream<Buffer>,
-    stdout: DoubleEndedStream<Buffer>,
-    stderr: DoubleEndedStream<Buffer>,
-}> {
+export async function run_block(statements: Statement[], env: Record<string, string>): Promise<Running> {
     const stdin = mk_stream<Buffer>();
     const stdout = mk_stream<Buffer>();
     const stderr = mk_stream<Buffer>();
@@ -155,9 +109,9 @@ export async function run_block(statements: Statement[], env: Record<string, str
     for (const i of statements)
         if (i.args !== terminator) {
             const runner = run_statement(i);
-            runner.stdin.join(stdin);
-            stdout.join(runner.stdout);
-            stderr.join(runner.stderr);
+            runner.stdin.concat(stdin);
+            stdout.concat(runner.stdout);
+            stderr.concat(runner.stderr);
 
             awaited.push(runner.start(env));
         } else if (!await awaited.pop())
@@ -169,6 +123,7 @@ export async function run_block(statements: Statement[], env: Record<string, str
     return Object.assign({
         stdin,
         stdout,
-        stderr
+        stderr,
+        exit: () => Promise.all(awaited).then(res => res.every(i => i))
     }, {[block]: true});
 }
