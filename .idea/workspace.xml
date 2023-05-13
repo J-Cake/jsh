@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" ENABLED="true" CONFIG_NAME="Debug" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="d600a596-69c4-405a-a93e-c3e4265ef667" name="Changes" comment="Working on pipes">
+      <change afterPath="$PROJECT_DIR$/tests/pipes_n_shit.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/executable.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/executable.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/statement.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/statement.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/stream.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/stream.ts" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ChangesViewManager">
+    <option name="groupingKeys">
+      <option value="directory" />
+    </option>
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="TypeScript File" />
+        <option value="JavaScript File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MacroExpansionManager">
+    <option name="directoryName" value="9ofvwvb5" />
+  </component>
+  <component name="ProjectId" id="2OYyEQYeZMXNBRgpEjCOZdtjXpc" />
+  <component name="ProjectViewState">
+    <option name="compactDirectories" value="true" />
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="false" />
+    <option name="showLibraryContents" value="true" />
+    <option name="showMembers" value="true" />
+    <option name="showVisibilityIcons" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;true&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;javascript.nodejs.core.library.configured.version&quot;: &quot;19.9.0&quot;,
+    &quot;javascript.nodejs.core.library.typings.version&quot;: &quot;18.15.11&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/jcake/Code/Personal/jsh/run.js&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;pnpm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;settings.typescriptcompiler&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/home/jcake/Code/Personal/jsh/node_modules/typescript/lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="configurationTypes">
+      <set>
+        <option value="NodeJSConfigurationType" />
+        <option value="ShConfigurationType" />
+        <option value="js.build_tools.npm" />
+      </set>
+    </option>
+  </component>
+  <component name="RunManager" selected="Node.js.JSH">
+    <configuration name="JSH" type="ShConfigurationType">
+      <option name="SCRIPT_TEXT" value="node --enable-source-maps=true . --log-level debug" />
+      <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
+      <option name="SCRIPT_PATH" value="" />
+      <option name="SCRIPT_OPTIONS" value="" />
+      <option name="INDEPENDENT_SCRIPT_WORKING_DIRECTORY" value="true" />
+      <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="INDEPENDENT_INTERPRETER_PATH" value="true" />
+      <option name="INTERPRETER_PATH" value="/bin/bash" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="EXECUTE_IN_TERMINAL" value="false" />
+      <option name="EXECUTE_SCRIPT_FILE" value="false" />
+      <envs />
+      <method v="2">
+        <option name="TypeScript.Before.Run" enabled="true" FAIL_ON_ERROR="true" CONFIG_PATH="$PROJECT_DIR$/tsconfig.json" />
+        <option name="NpmBeforeRunTask" enabled="true">
+          <package-json value="$PROJECT_DIR$/package.json" />
+          <command value="run" />
+          <scripts>
+            <script value="build" />
+          </scripts>
+          <node-interpreter value="project" />
+          <envs />
+        </option>
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Node.js.JSH" />
+      <item itemvalue="Shell Script.JSH" />
+    </list>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="d600a596-69c4-405a-a93e-c3e4265ef667" name="Changes" comment="" />
+      <created>1681751697678</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1681751697678</updated>
+      <workItem from="1681751698921" duration="3981000" />
+      <workItem from="1681847865899" duration="44206000" />
+      <workItem from="1682249433024" duration="14422000" />
+      <workItem from="1682270011330" duration="9953000" />
+      <workItem from="1682713796106" duration="2669000" />
+      <workItem from="1682716480867" duration="18000" />
+      <workItem from="1682716536630" duration="4503000" />
+      <workItem from="1682755894524" duration="6779000" />
+      <workItem from="1682933106827" duration="2068000" />
+      <workItem from="1683447425682" duration="39000" />
+      <workItem from="1683447482847" duration="1930000" />
+    </task>
+    <task id="LOCAL-00001" summary="command escapes working">
+      <created>1681853922924</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1681853922924</updated>
+    </task>
+    <task id="LOCAL-00002" summary="recursively nest subcommands">
+      <created>1681855573784</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1681855573784</updated>
+    </task>
+    <task id="LOCAL-00003" summary="make blocks part of previous statement">
+      <created>1681855912614</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1681855912614</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Fixed parsing bugs">
+      <created>1681935258179</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1681935258179</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Added commment">
+      <created>1681938203737</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1681938203737</updated>
+    </task>
+    <task id="LOCAL-00006" summary="worked on piping">
+      <created>1681940680477</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1681940680477</updated>
+    </task>
+    <task id="LOCAL-00007" summary="parse Piping syntax">
+      <created>1682177733105</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1682177733105</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Added statement terminators for extra clarity">
+      <created>1682179423260</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1682179423260</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Separate by loose parts">
+      <created>1682197640936</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1682197640936</updated>
+    </task>
+    <task id="LOCAL-00010" summary="First command!">
+      <created>1682252005568</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1682252005568</updated>
+    </task>
+    <task id="LOCAL-00011" summary="awaiting commands">
+      <created>1682253130965</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1682253130965</updated>
+    </task>
+    <task id="LOCAL-00012" summary="my head hurts">
+      <created>1682273144251</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1682273144251</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Subcommands work!">
+      <created>1682273313779</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1682273313779</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Working on pipes">
+      <created>1682279327366</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1682279327366</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="command escapes working" />
+    <MESSAGE value="recursively nest subcommands" />
+    <MESSAGE value="make blocks part of previous statement" />
+    <MESSAGE value="Fixed parsing bugs" />
+    <MESSAGE value="Added commment" />
+    <MESSAGE value="worked on piping" />
+    <MESSAGE value="parse Piping syntax" />
+    <MESSAGE value="Added statement terminators for extra clarity" />
+    <MESSAGE value="Separate by loose parts" />
+    <MESSAGE value="First command!" />
+    <MESSAGE value="awaiting commands" />
+    <MESSAGE value="my head hurst" />
+    <MESSAGE value="my head hurts" />
+    <MESSAGE value="Subcommands work!" />
+    <MESSAGE value="Working on pipes" />
+    <option name="LAST_COMMIT_MESSAGE" value="Working on pipes" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>

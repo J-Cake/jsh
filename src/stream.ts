@@ -57,7 +57,7 @@ export function mk_stream<T extends Exclude<any, typeof close>>(): DoubleEndedSt
             return new Promise<T>(resolve => listeners.push(resolve));
         },
         write(value: T) {
-            if (!closed) {
+            if (!closed || value == close) {
                 for (const i of splits)
                     i.write(value);
 

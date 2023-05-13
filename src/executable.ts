@@ -40,7 +40,15 @@ export default async function executable(cmd: LineTree, env: Record<string, stri
 
     const proc: cp.ChildProcessWithoutNullStreams = cp.spawn(exe, args.slice(1), {
         env,
-        cwd: env.PWD ?? process.cwd()
+        cwd: env.PWD ?? process.cwd(),
+        stdio: []
+    });
+
+    proc.once('exit', function(code) {
+        log.debug(`Process ${args[0]} exited with code`, code ?? 'null');
+        stdin.close();
+        stdout.close();
+        stderr.close();
     });
 
     stream.Readable.from(stdin).pipe(proc.stdin);
@@ -51,6 +59,6 @@ export default async function executable(cmd: LineTree, env: Record<string, stri
         stdin,
         stdout,
         stderr,
-        exit: () => new Promise(ok => proc.once('exit', code => ok(code == 0)))
+        exit: () => new Promise<boolean>(ok => proc.once('exit', code => ok(code == 0)))
     };
 }

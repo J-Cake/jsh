@@ -67,34 +67,44 @@ export default function run_statement(statement: Statement): Runner {
             if (statement.args === terminator)
                 return true;
 
-            const runners = [
-                await lang_struct(statement.args as any)
-                    .catch(() => library_fn(statement.args as any))
-                    .catch(() => executable(statement.args as any, env)),
+            const source = await lang_struct(statement.args as any)
+                .catch(() => library_fn(statement.args as any))
+                .catch(() => executable(statement.args as any, env));
 
-                ...await Promise.all(statement.dest.map(i => lang_struct(i.stmt!.args as any)
-                    .catch(() => library_fn(i.stmt!.args as any))
-                    .catch(() => executable(i.stmt!.args as any, env))))
-            ];
+            const dest = await Promise.all(statement.dest.map(i => lang_struct(i.stmt!.args as any)
+                .catch(() => library_fn(i.stmt!.args as any))
+                .catch(() => executable(i.stmt!.args as any, env))));
 
-            for (const [a, i] of statement.dest.entries())
-                if (i.stmt)
-                    [
-                        runners[a + 1].stdin,
-                        runners[a + 1].stdout,
-                        runners[a + 1].stderr,
-                    ][i.to].concat([
-                        runners[0].stdin.split(),
-                        runners[0].stdout.split(),
-                        runners[0].stderr.split(),
-                    ][i.from]);
-
-            runners[0].stdin.concat(stdio.stdin);
-            stdio.stdout.concat(runners.at(-1)!.stdout);
-            stdio.stderr.concat(runners.at(-1)!.stderr);
-
-            return await Promise.all(runners.map(i => i.exit()))
-                .then(res => res.every(i => i));
+            //     const runners = [
+            //         await lang_struct(statement.args as any)
+            //             .catch(() => library_fn(statement.args as any))
+            //             .catch(() => executable(statement.args as any, env)),
+            //
+            //         ...await Promise.all(statement.dest.map(i => lang_struct(i.stmt!.args as any)
+            //             .catch(() => library_fn(i.stmt!.args as any))
+            //             .catch(() => executable(i.stmt!.args as any, env))))
+            //     ];
+            //
+            //     for (const [a, i] of statement.dest.entries())
+            //         if (i.stmt)
+            //             [
+            //                 runners[a + 1].stdin,
+            //                 runners[a + 1].stdout,
+            //                 runners[a + 1].stderr,
+            //             ][i.to].concat([
+            //                 runners[0].stdin.split(),
+            //                 runners[0].stdout.split(),
+            //                 runners[0].stderr.split(),
+            //             ][i.from]);
+            //
+            //     runners[0].stdin.concat(stdio.stdin);
+            //     stdio.stdout.concat(runners.at(-1)!.stdout);
+            //     stdio.stderr.concat(runners.at(-1)!.stderr);
+            //
+            //     return await Promise.all(runners.map(i => i.exit()))
+            //         .then(res => res.every(i => i));
+            // }
+            return false;
         }
     };
 
